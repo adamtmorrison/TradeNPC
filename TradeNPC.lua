@@ -3,7 +3,7 @@ bit = require('bit')
 res_items = require('resources').items
 
 _addon.name = 'TradeNPC'
-_addon.author = 'Ivaar + Copilot update'
+_addon.author = 'Ivaar + VC-MSCP (Vibe coding using Microsoft CoPilot)'
 _addon.version = '1.21.06.14'
 _addon.command = 'tradenpc'
 
