@@ -125,7 +125,7 @@ You will need to run the command multiple times.
 ### 📘 Usage Examples
 Trade all of one item:
 ```
-//tradenpc all "Wind Crystals"
+//tradenpc all "Wind Crystal"
 ```
 Trade all crystals to Ephemeral Moogle:
 ```
