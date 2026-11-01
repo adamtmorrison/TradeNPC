@@ -3,10 +3,36 @@ bit = require('bit')
 res_items = require('resources').items
 
 _addon.name = 'TradeNPC'
-_addon.author = 'Ivaar + VC-MSCP (Vibe coding using Microsoft CoPilot)'
-_addon.version = '1.21.06.14'
+_addon.author = 'Ivaar + Copilot update'
+_addon.version = '1.21.07.1'
 _addon.command = 'tradenpc'
 
+local settings = {
+    trade_delay = 2.0,
+
+    excluded_crystals = {
+        ['fire crystal'] = true,
+        ['ice crystal'] = false,
+        ['wind crystal'] = false,
+        ['earth crystal'] = false,
+        ['lightning crystal'] = false,
+        ['water crystal'] = false,
+        ['light crystal'] = false,
+        ['dark crystal'] = false,
+
+        ['fire crystals'] = true,
+        ['ice crystals'] = false,
+        ['wind crystals'] = false,
+        ['earth crystals'] = false,
+        ['lightning crystals'] = false,
+        ['water crystals'] = false,
+        ['light crystals'] = true,
+        ['dark crystals'] = false,
+    }
+}
+
+local crystal_trade_active = false
+local crystal_trade_target = nil
 local crystal_names = {
     'fire crystal',
     'ice crystal',
@@ -16,6 +42,14 @@ local crystal_names = {
     'water crystal',
     'light crystal',
     'dark crystal',
+	'fire crystals',
+    'ice crystals',
+    'wind crystals',
+    'earth crystals',
+    'lightning crystals',
+    'water crystals',
+    'light crystals',
+    'dark crystals',
 }
 
 function get_item_res(item)
@@ -97,25 +131,104 @@ function add_all_crystals_to_trade(inventory, exclude, ind, qty)
     local found_any = false
 
     for _, crystal_name in ipairs(crystal_names) do
-        local item = get_item_res(crystal_name)
-        if item then
-            local total = get_inventory_item_total(inventory, item.id)
-            if total > 0 then
-                found_any = true
-                local ok = add_item_to_trade(inventory, exclude, ind, qty, item, total, 'all')
-                if not ok then
-                    return false
+
+        if not settings.excluded_crystals[crystal_name] then
+
+            local item = get_item_res(crystal_name)
+
+            if item then
+                for k, v in ipairs(inventory) do
+
+                    if #ind >= 8 then
+                        return true
+                    end
+
+                    if v.id == item.id
+                    and v.count > 0
+                    and v.status == 0
+                    and not exclude[k] then
+
+                        exclude[k] = true
+
+                        ind[#ind + 1] = k
+                        qty[#qty + 1] = v.count
+
+                        found_any = true
+                    end
                 end
             end
         end
     end
 
-    if not found_any then
-        print('No crystals found in inventory.')
-        return false
+    return found_any
+end
+
+function send_next_crystal_trade()
+
+    if not crystal_trade_active then
+        return
     end
 
-    return true
+    local inventory = windower.ffxi.get_items(0)
+
+    if not inventory then
+        crystal_trade_active = false
+        return
+    end
+
+    local ind = {}
+    local qty = {}
+    local exclude = {}
+
+    local found = add_all_crystals_to_trade(
+        inventory,
+        exclude,
+        ind,
+        qty
+    )
+
+    if not found then
+        print('[TradeNPC] Crystal trading complete.')
+        crystal_trade_active = false
+        return
+    end
+
+    local num = #ind
+
+    for x = num, 8 do
+        ind[x + 1] = 0
+        qty[x + 1] = 0
+    end
+
+    local menu_item = 'C4I11C10HI':pack(
+        0x36, 0x20, 0x00, 0x00,
+        crystal_trade_target.id,
+
+        qty[1], qty[2], qty[3], qty[4],
+        qty[5], qty[6], qty[7], qty[8],
+        qty[9], 0x00,
+
+        ind[1], ind[2], ind[3], ind[4],
+        ind[5], ind[6], ind[7], ind[8],
+        ind[9], 0x00,
+
+        crystal_trade_target.index,
+        num
+    )
+
+    windower.packets.inject_outgoing(
+        0x36,
+        menu_item
+    )
+
+    coroutine.schedule(function()
+
+        if crystal_trade_active then
+            send_next_crystal_trade()
+        end
+
+    end, settings.trade_delay)
+
 end
 
 windower.register_event('addon command', function(...)
@@ -147,36 +260,11 @@ windower.register_event('addon command', function(...)
             return
         end
 
-        local inventory = windower.ffxi.get_items(0)
-        if not inventory then return end
+       crystal_trade_target = target
+		crystal_trade_active = true
 
-        local ind = {}
-        local qty = {}
-        local exclude = {}
+		send_next_crystal_trade()
 
-        local ok = add_all_crystals_to_trade(inventory, exclude, ind, qty)
-        if not ok then
-            return
-        end
-
-        local num = #ind
-        if num > 0 and num <= 8 then
-            for x = num, 8 do
-                ind[x + 1] = 0
-                qty[x + 1] = 0
-            end
-
-            local menu_item = 'C4I11C10HI':pack(
-                0x36, 0x20, 0x00, 0x00, target.id,
-                qty[1], qty[2], qty[3], qty[4], qty[5], qty[6], qty[7], qty[8], qty[9], 0x00,
-                ind[1], ind[2], ind[3], ind[4], ind[5], ind[6], ind[7], ind[8], ind[9], 0x00,
-                target.index, num
-            )
-
-            windower.packets.inject_outgoing(0x36, menu_item)
-        else
-            print('Too many item slots needed. This crystal trade would require more than 8 trade slots.')
-        end
 
         return
     end
