@@ -1,81 +1,63 @@
 # TradeNPC
 
-Trade an npc up to 8 stacks of items and gil with a single command.
+Trade an NPC up to 8 stacks of items and gil with a single command.
 
-### Command Usage:
-```
+## Command Usage
+
+```text
 tradenpc <quantity> <item name> [npc name]
 ```
 
-Quantities greater than an items stack size are accepted, if you specify too many items the trade will not occur.
+### Features
 
-For gil CSV and EU decimal mark are optional. e.g. 100000 or 100,000 or 100.000
+- Supports gil trades
+- Supports multiple items per command
+- Accepts auto-translate, short, or full item names
+- Supports trading all copies of an item
+- Supports automated crystal trading
 
-Accepts auto-translate, short or full item name.
+## Examples
 
-If the item name is more than one word you must use quotes or auto-translate.
-
-Multiple items can be traded in one command.
-
-If trading gil it must be the first set of arguments or the trade will not occur.
-
-If you need to exceed the chatlog character limit, you can type the command from console or execute via a txt script.
-
-### Examples
-
-```
+```text
 //tradenpc 100 "1 byne bill"
 
 //tradenpc 792 alexandrite
 
-//tradenpc 10,000 gil 24 "fire crystal" 12 "earth crystal" 18 "water crystal" 6 "dark crystal" "Ephemeral Moogle"
-```
-# TradeNPC (VC - Enhanced)
+//tradenpc all "Wind Crystal"
 
-An enhanced version of the original **TradeNPC** Windower addon by Ivaar for **Final Fantasy XI**.
-
-This version improves automated trading and introduces new functionality for efficiently trading crystals—especially to the **Ephemeral Moogle**.
-
----
-
-## ✅ Overview
-
-The original TradeNPC addon allows players to trade items to NPCs using commands.
-
-This enhanced version adds:
-
-- Automatic **“trade all”** support
-- A new **crystal batch trading command**
-- Improved handling of **inventory stacks**
-
-These updates remove the need for manual counting and simplify repetitive trading tasks.
-
----
-
-## 🚀 New Features
-
-### 🔹 Trade All Items (`all` keyword)
-
-Automatically trade all copies of an item in your inventory:
-```
-//tradenpc all "Wind Crystals" "Ephemeral Moogle"
-````
-### Behavior:
-
-Scans inventory
-Totals all matching items
-Trades the full amount automatically
-
-
-### 🔹 Trade All Crystal Types (crystals command)
-Quickly trade every crystal type you have:
-```
 //tradenpc crystals "Ephemeral Moogle"
 ```
-or:
+
+---
+
+# TradeNPC (VC - Enhanced)
+
+Enhanced version of the original TradeNPC addon by **Ivaar** for **Final Fantasy XI**.
+
+## New Features
+
+### Trade All Items
+
+Trade every copy of a specific item:
+
+```text
+//tradenpc all "Wind Crystal"
 ```
+
+### Automated Crystal Trading
+
+Trade all crystal types with a single command:
+
+```text
+//tradenpc crystals "Ephemeral Moogle"
+```
+
+or
+
+```text
 //tradenpc allcrystals
 ```
+
 Supported crystal types:
 
 - Fire Crystal
@@ -87,65 +69,88 @@ Supported crystal types:
 - Light Crystal
 - Dark Crystal
 
-Behavior:
+### Automatic Multi-Trade Processing
 
-- Detects all crystal types in inventory
-- Totals each type individually
-- Builds a trade using available stacks
-- Sends a single trade request to the target NPC
+FFXI is limited to **8 inventory slots per trade**.
 
-🔧 Improvements
-✅ Smarter Inventory Handling
-- Aggregates items across multiple stacks
-- Supports mixed partial stacks
-- Prevents failures when items are split across slots
+When more than 8 crystal stacks are present, TradeNPC will:
 
-✅ Improved Trade Slot Selection
-- Prioritizes full stacks when possible
-- Falls back to largest available partial stacks
-- Ensures more reliable trade construction
+1. Fill all available trade slots
+2. Send the trade
+3. Wait for the configured delay
+4. Rescan inventory
+5. Continue trading automatically
 
-🔁 Preserved Features
-All original functionality is maintained:
-- Standard quantity-based trades still work
-- NPC targeting by name is unchanged
+The process repeats until all eligible crystals have been traded.
 
-⚠️ Limitations
-This addon still follows FFXI trade system constraints:
-- Trades are sent as a single packet
-- Limited number of item slots per trade
+No re-targeting or multiple commands required.
 
-### Important:
-If you see:
+### Crystal Exclusions
+
+Specific crystal types can be excluded from automatic trading:
+
+```lua
+excluded_crystals = {
+    ['light crystal'] = true,
+    ['light crystals'] = true,
+}
 ```
-Too many items. This trade would require more than 8 trade slots.
-```
-You will need to run the command multiple times.
 
-### 📘 Usage Examples
-Trade all of one item:
-```
+Useful for keeping crafting crystals while trading everything else.
+
+## Improvements
+
+- Automatic crystal batching
+- Continuous multi-trade processing
+- Configurable crystal exclusions
+- Improved inventory handling
+- Better trade slot utilization
+- Eliminates long crystal-trading aliases
+
+## Usage Examples
+
+Trade all copies of an item:
+
+```text
 //tradenpc all "Wind Crystal"
 ```
-Trade all crystals to Ephemeral Moogle:
-```
-//tradenpc crystals "Ephemeral Moogle"
-```
-Trade all crystals (target already selected):
-```
+
+Trade all crystals:
+
+```text
 //tradenpc crystals
 ```
-🛠 Installation
 
-Replace your existing TradeNPC.lua with this version
-Reload the addon in-game:
+Trade all crystals to the Ephemeral Moogle:
+
+```text
+//tradenpc crystals "Ephemeral Moogle"
 ```
+
+## Installation
+
+1. Replace your existing `TradeNPC.lua`
+2. Configure any desired crystal exclusions
+3. Reload the addon:
+
+```text
 //lua r tradenpc
 ```
-🙌 Credits
-Original addon: Ivaar
-Enhancements done via: VC-MSCP (Vibe coding using Microsoft CoPilot)
-Enhancements: Updated version with automated inventory handling and crystal trading support
 
-📜 License
+## Credits
+
+**Original Addon:** Ivaar
+
+**Enhancements:** VC-MSCP (Vibe Coding with Microsoft Copilot)
+
+### Added Enhancements
+
+- Trade-all support
+- Automated crystal detection
+- Continuous crystal batch trading
+- Crystal exclusion configuration
+- Improved inventory handling
+
+## License
+
 This project retains the original TradeNPC license by Ivaar.
